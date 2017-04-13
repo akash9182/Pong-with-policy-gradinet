@@ -13,4 +13,4 @@ Run demo.py and the AI will start playing the game
 
 Credits
 
-Credits go to and Siraj  AndrejK i've merely created a wrapper to get people started.
+Credits go to and Siraj raval AndrejK i've merely created a wrapper to get people started.
