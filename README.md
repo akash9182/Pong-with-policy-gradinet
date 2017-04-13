@@ -3,9 +3,9 @@ How to Beat Pong Using Policy Gradients
 
 ### Dependencies
 
-gym (https://gym.openai.com/docs)
-numpy
-pickle
+* gym (https://gym.openai.com/docs)
+* numpy
+* pickle
 Install dependencies with pip
 
 ### Usage
