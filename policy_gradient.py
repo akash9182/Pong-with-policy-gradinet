@@ -40,7 +40,7 @@ def discount_reward(r):
 	running_add  = 0
 	for t in reversed(xrangd(0, r.size)):
 		if r[t] != 0: running_add = 0
-		running_add = running_add 8 gamma +r[t]
+		running_add = running_add * gamma +r[t]
 		discounted_r[t] = running_add
 	return discount_r
 
@@ -97,35 +97,35 @@ while True:
 		epdlogp = np.vstack(dlogps)
 		epr = np.vstack(drs)
 		xs , hs, dlogp, drs = [], [] , [], []
-    #the strength with which we encourage a sampled action is the weighted sum of all rewards afterwards, but later rewards are exponentially less important
-    # compute the discounted reward backwards through time
-    discounted_epr = discount_rewards(epr)
-    # standardize the rewards to be unit normal (helps control the gradient estimator variance)
-    discounted_epr -= np.mean(discounted_epr)
-    discounted_epr /= np.std(discounted_epr)
+	#the strength with which we encourage a sampled action is the weighted sum of all rewards afterwards, but later rewards are exponentially less important
+	# compute the discounted reward backwards through time
+	discounted_epr = discount_rewards(epr)
+	# standardize the rewards to be unit normal (helps control the gradient estimator variance)
+	discounted_epr -= np.mean(discounted_epr)
+	discounted_epr /= np.std(discounted_epr)
 
-    #advatnage - quantity which describes how good the action is compared to the average of all the action.
-    epdlogp *= discounted_epr # modulate the gradient with advantage (PG magic happens right here.)
-    grad = policy_backward(eph, epdlogp)
-    for k in model: grad_buffer[k] += grad[k] # accumulate grad over batch
+	#advatnage - quantity which describes how good the action is compared to the average of all the action.
+	epdlogp *= discounted_epr # modulate the gradient with advantage (PG magic happens right here.)
+	grad = policy_backward(eph, epdlogp)
+	for k in model: grad_buffer[k] += grad[k] # accumulate grad over batch
 
-    # perform rmsprop parameter update every batch_size episodes
-    #http://68.media.tumblr.com/2d50e380d8e943afdfd66554d70a84a1/tumblr_inline_o4gfjnL2xK1toi3ym_500.png
-    if episode_number % batch_size == 0:
-      for k,v in model.iteritems():
-        g = grad_buffer[k] # gradient
-        rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
-        model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
-        grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
+	# perform rmsprop parameter update every batch_size episodes
+	#http://68.media.tumblr.com/2d50e380d8e943afdfd66554d70a84a1/tumblr_inline_o4gfjnL2xK1toi3ym_500.png
+	if episode_number % batch_size == 0:
+	for k,v in model.iteritems():
+		g = grad_buffer[k] # gradient
+		rmsprop_cache[k] = decay_rate * rmsprop_cache[k] + (1 - decay_rate) * g**2
+		model[k] += learning_rate * g / (np.sqrt(rmsprop_cache[k]) + 1e-5)
+		grad_buffer[k] = np.zeros_like(v) # reset batch gradient buffer
 
-    # boring book-keeping
-    running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
-    print('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
-    if episode_number % 100 == 0: pickle.dump(model, open('save.p', 'wb'))
-    reward_sum = 0
-    observation = env.reset() # reset env
-    prev_x = None
+	# boring book-keeping
+	running_reward = reward_sum if running_reward is None else running_reward * 0.99 + reward_sum * 0.01
+	print('resetting env. episode reward total was %f. running mean: %f' % (reward_sum, running_reward))
+	if episode_number % 100 == 0: pickle.dump(model, open('save.p', 'wb'))
+	reward_sum = 0
+	observation = env.reset() # reset env
+	prev_x = None
 
-  if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
-    print ('ep %d: game finished, reward: %f' % (episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!')
+	if reward != 0: # Pong has either +1 or -1 reward exactly when game ends.
+	print ('ep %d: game finished, reward: %f' % (episode_number, reward)) + ('' if reward == -1 else ' !!!!!!!!')
 
